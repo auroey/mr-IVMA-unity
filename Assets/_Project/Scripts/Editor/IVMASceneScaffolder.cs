@@ -74,27 +74,59 @@ public static class IVMASceneScaffolder
             CreateChild(root.transform, "NotesRoot");
         });
 
+        // System prefabs (used by BootstrapInstaller defaults)
+        CreatePrefabIfMissing($"{PrefabsRoot}/Tools/MRTK XR Rig.prefab", root =>
+        {
+            // Placeholder rig root; name is used by BootstrapInstaller's lookup.
+            root.name = "MRTK XR Rig";
+        });
+
+        CreatePrefabIfMissing($"{PrefabsRoot}/Tools/EventSystem.prefab", root =>
+        {
+            root.name = "EventSystem";
+
+            // Ensure an actual EventSystem component exists in the prefab.
+            var esType = System.Type.GetType("UnityEngine.EventSystems.EventSystem, UnityEngine.UI") ??
+                         System.Type.GetType("UnityEngine.EventSystems.EventSystem");
+            if (esType != null && root.GetComponent(esType) == null)
+            {
+                root.AddComponent(esType);
+            }
+
+            // Try to add a default input module (either legacy or new input system).
+            var legacyModule = System.Type.GetType("UnityEngine.EventSystems.StandaloneInputModule, UnityEngine.UI") ??
+                               System.Type.GetType("UnityEngine.EventSystems.StandaloneInputModule");
+            if (legacyModule != null && root.GetComponent(legacyModule) == null)
+            {
+                root.AddComponent(legacyModule);
+                return;
+            }
+
+            var inputSystemModule = System.Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+            if (inputSystemModule != null && root.GetComponent(inputSystemModule) == null)
+            {
+                root.AddComponent(inputSystemModule);
+            }
+        });
+
         CreateSceneIfMissing($"{ScenesRoot}/00_Bootstrap.unity", scene =>
         {
             var systems = new GameObject("_SYSTEMS");
-            CreateChild(systems.transform, "MRTK XR Rig (placeholder)");
-            CreateChild(systems.transform, "SceneLoader (placeholder)");
+            var sceneLoader = CreateChild(systems.transform, "SceneLoader");
+            sceneLoader.AddComponent<SceneLoader>();
+
+            var installer = new GameObject("BootstrapInstaller");
+            installer.AddComponent<BootstrapInstaller>();
         });
 
         CreateSceneIfMissing($"{ScenesRoot}/10_Anatomy_Main.unity", scene =>
         {
-            // Root groups (recommended: stable 5 roots)
-            var systems = new GameObject("_SYSTEMS");
+            // Content scene for Additive architecture: no XR/MRTK systems here.
+            // Keep only content/UI/managers (and optional per-scene environment).
             var env = new GameObject("_ENV");
             var content = new GameObject("_CONTENT");
             var ui = new GameObject("_UI");
             var managers = new GameObject("_MANAGERS");
-
-            // _SYSTEMS
-            CreateChild(systems.transform, "MRTK XR Rig (or XR Origin)");
-            CreateChild(systems.transform, "MRTKInputSimulator (Editor only)");
-            CreateChild(systems.transform, "XR Interaction Manager");
-            CreateChild(systems.transform, "EventSystem");
 
             // _ENV
             var dirLight = CreateChild(env.transform, "Directional Light");

@@ -21,6 +21,7 @@
     "com.unity.timeline": "1.6.5",
     "com.unity.ugui": "1.0.0",
     "com.unity.visualscripting": "1.9.4",
+    "com.unity.xr.openxr": "1.13.2",
     "org.mixedrealitytoolkit.audio": "3.0.0",
     "org.mixedrealitytoolkit.core": "3.0.0",
     "org.mixedrealitytoolkit.diagnostics": "3.0.0",
